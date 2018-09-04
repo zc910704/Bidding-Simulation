@@ -2,10 +2,10 @@ import random
 import pandas as pd
 import numpy as np
 
-clist = [0.95, 0.955, 0.96 ,0.965 ,0.97 ,0.975 ,0,98 ,0.985]
+clist = [0.95, 0.955, 0.96, 0.965 ,0.97 ,0.975 ,0.98 ,0.985]
 flist = [6, 8 ,10]
 BID_CONTROL = 21
-ABlimit = 0.9* BID_CONTROL
+ABlimit = 0.9 * BID_CONTROL
 Dlist = []
 
 
@@ -36,11 +36,12 @@ def bid_main(n):
         b_min_part_mean = average(b_min_part)
 
         b_mean = solve_b_mean(b_max_part_mean, b_medium_part_mean, b_min_part_mean)
-        D1 = min(0.85*ABlimit, b_mean)
+        bid_control_85 = 0.85 * BID_CONTROL
+        D1 = min(bid_control_85, b_mean)
         E = D1 * C
         D = E * (100-F)/100 +  BID_CONTROL * F / 100
         if not bid_canditate_b:
-            D = 0.85 * BID_CONTROL
+            D = bid_control_85
         Dlist.append(D)
 
 def average(list):
@@ -72,22 +73,28 @@ def devide_b_to_part(bid_canditate_b, bid_canditate_b_mean):
 
 def solve_b_mean(b_max_part_mean, b_medium_part_mean, b_min_part_mean):
     b_list = []
-    b_list.append(b_max_part_mean)
-    b_list.append(b_medium_part_mean)
-    b_list.append(b_min_part_mean)
+    if b_max_part_mean:
+        b_list.append(b_max_part_mean)
+    if b_medium_part_mean:
+        b_list.append(b_medium_part_mean)
+    if b_min_part_mean:    
+        b_list.append(b_min_part_mean)
+
     if len(b_list)%2 == 0:
         b_mean = average(b_list)
     else:
-        b_mean = b_list.index((int(len(b_list)+1)/2))
+        index = int(len(b_list)/2)
+        b_mean = b_list[index]
     return b_mean
 
 def get_random(list):
-    return random.choice(list)
+    ags = random.choice(list)
+    return ags
 
 def generate_random_biding(bid_canditate):
     canditator = random.randint(1,20)
     for company in range(canditator):
-        bid_canditate.append(BID_CONTROL*random.uniform(0.6, 1))
+        bid_canditate.append(BID_CONTROL*random.uniform(0.7, 1))
     
     return bid_canditate
 
