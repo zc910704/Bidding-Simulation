@@ -43,7 +43,8 @@ def bid_main(n):
         if not bid_canditate_b:
             D = bid_control_85
         Dlist.append(D)
-
+        save_to_excel(Dlist)
+        
 def average(list):
     total = 0
     average = 0
@@ -97,6 +98,10 @@ def generate_random_biding(bid_canditate):
         bid_canditate.append(BID_CONTROL*random.uniform(0.7, 1))
     
     return bid_canditate
+
+def save_to_excel(list):
+    df = pd.DataFrame(list)
+    df.to_excel("test.xlsx", sheet_name = "中标价", index = False, header = True)
 
 def main():
     bid_main(10)
