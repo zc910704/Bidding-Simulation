@@ -1,6 +1,7 @@
 import random
 import pandas as pd
 import numpy as np
+import datetime
 
 clist = [0.95, 0.955, 0.96, 0.965 ,0.97 ,0.975 ,0.98 ,0.985]
 flist = [6, 8 ,10]
@@ -8,9 +9,18 @@ BID_CONTROL = 21
 ABlimit = 0.9 * BID_CONTROL
 Dlist = []
 
+#装饰器
+def count_time(func):
+    def inner_func(*arg, **kwargs):
+        start_time = datetime.datetime.now ()
+        func(arg[0])
+        over_time = datetime.datetime.now()
+        total_cost = (over_time-start_time).total_seconds()
+        print("程序共计%s秒" %total_cost)
+    return inner_func    
 
 #函数定义 function definition
-
+@count_time
 def bid_main(n):
     for i in range(n):
         C = get_random(clist)
@@ -101,7 +111,7 @@ def generate_random_biding(bid_canditate):
 
 def save_to_excel(list):
     df = pd.DataFrame(list)
-    df.to_excel("test.xlsx", sheet_name = "中标价", index = False, header = True)
+    df.to_excel("test.xlsx", sheet_name = "中标价", index = False, header = False)
 
 def main():
     bid_main(10)
@@ -109,3 +119,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
