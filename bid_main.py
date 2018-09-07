@@ -19,41 +19,58 @@ def count_time(func):
         print("程序共计%s秒" %total_cost)
     return inner_func    
 
+def eta_time_estimate(func):
+    def inner_func(*arg, **kwargs):
+        start_time = datetime.datetime.now()
+        inner_i,inner_n = arg[0],arg[1]
+        func(inner_i)
+        over_time = datetime.datetime.now()
+        single_cost = (over_time-start_time).total_seconds()
+        if inner_i%10 == 0:
+            finish_percentage = inner_i*100/n
+            eta_time = (1/inner_n)*single_cost * (1-inner_i/inner_n)
+            print("已完成%d%%,预计剩余%s秒" %(finish_percentage, eta_time))
+
+
 #函数定义 function definition
 @count_time
 def bid_main(n):
     for i in range(n):
-        C = get_random(clist)
-        F = get_random(flist)
-        bid_canditate =[]
-        bid_canditate = generate_random_biding(bid_canditate)
-        bid_canditate_a = []
-        bid_canditate_b = []
-        for bid in bid_canditate:
-            if bid > ABlimit:
-                bid_canditate_a.append(bid)
-            else:
-                bid_canditate_b.append(bid)
-            
-        if len(bid_canditate_b) > 6 :
-            bid_canditate_b.remove(max(bid_canditate_b))
-            bid_canditate_b.remove(min(bid_canditate_b))
+        single_bid(i,n)
+    save_to_excel(Dlist)
 
-        bid_canditate_b_mean = average(bid_canditate_b)
-        b_max_part, b_medium_part, b_min_part = devide_b_to_part(bid_canditate_b, bid_canditate_b_mean)
-        b_max_part_mean = average(b_max_part)
-        b_medium_part_mean = average(b_medium_part)
-        b_min_part_mean = average(b_min_part)
+@eta_time_estimate
+def single_bid(i,n):
+    C = get_random(clist)
+    F = get_random(flist)
+    bid_canditate =[]
+    bid_canditate = generate_random_biding(bid_canditate)
+    bid_canditate_a = []
+    bid_canditate_b = []
+    for bid in bid_canditate:
+        if bid > ABlimit:
+            bid_canditate_a.append(bid)
+        else:
+            bid_canditate_b.append(bid)
+        
+    if len(bid_canditate_b) > 6 :
+        bid_canditate_b.remove(max(bid_canditate_b))
+        bid_canditate_b.remove(min(bid_canditate_b))
 
-        b_mean = solve_b_mean(b_max_part_mean, b_medium_part_mean, b_min_part_mean)
-        bid_control_85 = 0.85 * BID_CONTROL
-        D1 = min(bid_control_85, b_mean)
-        E = D1 * C
-        D = E * (100-F)/100 +  BID_CONTROL * F / 100
-        if not bid_canditate_b:
-            D = bid_control_85
-        Dlist.append(D)
-        save_to_excel(Dlist)
+    bid_canditate_b_mean = average(bid_canditate_b)
+    b_max_part, b_medium_part, b_min_part = devide_b_to_part(bid_canditate_b, bid_canditate_b_mean)
+    b_max_part_mean = average(b_max_part)
+    b_medium_part_mean = average(b_medium_part)
+    b_min_part_mean = average(b_min_part)
+
+    b_mean = solve_b_mean(b_max_part_mean, b_medium_part_mean, b_min_part_mean)
+    bid_control_85 = 0.85 * BID_CONTROL
+    D1 = min(bid_control_85, b_mean)
+    E = D1 * C
+    D = E * (100-F)/100 +  BID_CONTROL * F / 100
+    if not bid_canditate_b:
+        D = bid_control_85
+    Dlist.append(D)
         
 def average(list):
     total = 0
