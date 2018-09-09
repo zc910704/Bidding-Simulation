@@ -2,13 +2,13 @@ import random
 import pandas as pd
 import numpy as np
 import datetime
-import queue
+
 
 clist = [0.95, 0.955, 0.96, 0.965 ,0.97 ,0.975 ,0.98 ,0.985]
 flist = [6, 8 ,10]
 BID_CONTROL = 21
 ABlimit = 0.9 * BID_CONTROL
-queue = queue.Queue(maxsize=3)
+time_queue = []
 Dlist = []
 
 #装饰器定义
@@ -27,11 +27,12 @@ def eta_time_estimate_every_1000(func):
         inner_i,inner_n = arg[0],arg[1]
         if inner_i%1000 == 0:
             current_time = datetime.datetime.now()
-            queue.put(current_time)
-            queue.put(current_time)
+            time_queue.append(current_time)
+            if len(time_queue) == 3:
+                	time_queue.pop(0) 
         func(inner_i, inner_n)
         if inner_i%1000 == 0 and  inner_i != 0 and inner_i != inner_n :
-            step_cost = (queue.get()-queue.get()).total_seconds()
+            step_cost = (time_queue[1]-time_queue[0]).total_seconds()
             finish_percentage = inner_i*100/inner_n
             eta_time =  step_cost / (1000/inner_n) * (1-inner_i/inner_n)
             print("已完成%d%%,预计剩余%.2f秒" %(finish_percentage, eta_time))
