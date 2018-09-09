@@ -2,44 +2,45 @@ import random
 import pandas as pd
 import numpy as np
 import datetime
+import queue
 
 clist = [0.95, 0.955, 0.96, 0.965 ,0.97 ,0.975 ,0.98 ,0.985]
 flist = [6, 8 ,10]
 BID_CONTROL = 21
 ABlimit = 0.9 * BID_CONTROL
+queue = queue.Queue(maxsize=3)
 Dlist = []
 
-#装饰器
+#装饰器定义
+
 def count_time(func):
     def inner_func(*arg, **kwargs):
         start_time = datetime.datetime.now ()
         func(arg[0])
         over_time = datetime.datetime.now()
         total_cost = (over_time-start_time).total_seconds()
-        print("程序共计%s秒" %total_cost)
+        print("程序共计%.2f秒" %total_cost)
     return inner_func    
 
-def eta_time_estimate(func):
+def eta_time_estimate_every_1000(func):
     def inner_func(*arg, **kwargs):
-        start_time = datetime.datetime.now()
         inner_i,inner_n = arg[0],arg[1]
-        func(inner_i)
-        over_time = datetime.datetime.now()
-        single_cost = (over_time-start_time).total_seconds()
-        if inner_i%10 == 0:
-            finish_percentage = inner_i*100/n
-            eta_time = (1/inner_n)*single_cost * (1-inner_i/inner_n)
-            print("已完成%d%%,预计剩余%s秒" %(finish_percentage, eta_time))
+        if inner_i%1000 == 0:
+            current_time = datetime.datetime.now()
+            queue.put(current_time)
+            queue.put(current_time)
+        func(inner_i, inner_n)
+        if inner_i%1000 == 0 and  inner_i != 0 and inner_i != inner_n :
+            step_cost = (queue.get()-queue.get()).total_seconds()
+            finish_percentage = inner_i*100/inner_n
+            eta_time =  step_cost / (1000/inner_n) * (1-inner_i/inner_n)
+            print("已完成%d%%,预计剩余%.2f秒" %(finish_percentage, eta_time))
+    return inner_func
 
 
 #函数定义 function definition
-@count_time
-def bid_main(n):
-    for i in range(n):
-        single_bid(i,n)
-    save_to_excel(Dlist)
 
-@eta_time_estimate
+@eta_time_estimate_every_1000
 def single_bid(i,n):
     C = get_random(clist)
     F = get_random(flist)
@@ -72,6 +73,12 @@ def single_bid(i,n):
         D = bid_control_85
     Dlist.append(D)
         
+@count_time
+def bid_main(n):
+    for i in range(n):
+        single_bid(i,n)
+    save_to_excel(Dlist)
+
 def average(list):
     total = 0
     average = 0
@@ -126,12 +133,15 @@ def generate_random_biding(bid_canditate):
     
     return bid_canditate
 
+def get_distribution(Dlist):
+    pass
+
 def save_to_excel(list):
     df = pd.DataFrame(list)
     df.to_excel("test.xlsx", sheet_name = "中标价", index = False, header = False)
 
 def main():
-    bid_main(10)
+    bid_main(10000)
     print(Dlist)
 
 if __name__ == "__main__":
